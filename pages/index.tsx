@@ -1,6 +1,31 @@
 import Head from 'next/head'
+import React, { useEffect, useState } from 'react'
+import Link from 'next/link';
+
+export interface Transaction {
+  _id: string;
+  title: string;
+  amount: number;
+  category: string;
+  type: string;
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat('pt-BR', { currency: 'BRL', style: "currency" }).format(value);
+}
 
 export default function Home() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const fetchTransactions = async () => {
+    const { transactions } = await (await fetch('https://financas-api-poc.herokuapp.com/api/transactions')).json()
+    setTransactions(transactions);
+  }
+
+  useEffect(() => {
+    fetchTransactions()
+  }, []);
+
   return (
     <div className="container">
       <Head>
@@ -10,41 +35,19 @@ export default function Home() {
 
       <main>
         <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Transações
         </h1>
 
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
         <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+          {transactions.map(transaction => (
+            <div key={transaction._id} className="card">
+              <Link href={`transaction/${transaction._id}`}   >
+                <h3>{transaction.title}
+                  <span>{formatMoney(transaction.amount)}</span>
+                </h3>
+              </Link>
+            </div>
+          ))}
         </div>
       </main>
 
@@ -168,10 +171,14 @@ export default function Home() {
         }
 
         .card h3 {
+          display: flex;
+          justify-content: space-between;
           margin: 0 0 1rem 0;
           font-size: 1.5rem;
         }
-
+        .card h3 span {
+          font-weight: 400;
+        }
         .card p {
           margin: 0;
           font-size: 1.25rem;
@@ -204,6 +211,6 @@ export default function Home() {
           box-sizing: border-box;
         }
       `}</style>
-    </div>
+    </div >
   )
 }
